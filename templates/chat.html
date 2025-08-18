@@ -1,81 +1,225 @@
-<link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
-<script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
-<script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-
 <!DOCTYPE html>
-<html>
-	<head>
-		<title>Chatbot</title>
-		<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
-		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.5.0/css/all.css" integrity="sha384-B4dIYHKNBt8Bc12p+WXckhzcICo0wtJAoU8YZTY5qE0Id1GSseTk6S+L3BlXeVIU" crossorigin="anonymous">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-		<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css')}}"/>
-	</head>
-	
-	
-	<body>
-		<div class="container-fluid h-100">
-			<div class="row justify-content-center h-100">		
-				<div class="col-md-8 col-xl-6 chat">
-					<div class="card">
-						<div class="card-header msg_head">
-							<div class="d-flex bd-highlight">
-								<div class="img_cont">
-									<img src="https://cdn-icons-png.flaticon.com/512/387/387569.png" class="rounded-circle user_img">
-									<!-- <img src="https://www.prdistribution.com/spirit/uploads/pressreleases/2019/newsreleases/d83341deb75c4c4f6b113f27b1e42cd8-chatbot-florence-already-helps-thousands-of-patients-to-remember-their-medication.png" class="rounded-circle user_img"> -->
-									<span class="online_icon"></span>
-								</div>
-								<div class="user_info">
-									<span>Medical Chatbot</span>
-									<p>Ask me anything!</p>
-								</div>
-							</div>
-						</div>
-						<div id="messageFormeight" class="card-body msg_card_body">
-							
-							
-						</div>
-						<div class="card-footer">
-							<form id="messageArea" class="input-group">
-                                <input type="text" id="text" name="msg" placeholder="Type your message..." autocomplete="off" class="form-control type_msg" required/>
-								<div class="input-group-append">
-									<button type="submit" id="send" class="input-group-text send_btn"><i class="fas fa-location-arrow"></i></button>
-								</div>
-							</form>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		
-		<script>
-			$(document).ready(function() {
-				$("#messageArea").on("submit", function(event) {
-					const date = new Date();
-					const hour = date.getHours();
-					const minute = date.getMinutes();
-					const str_time = hour+":"+minute;
-					var rawText = $("#text").val();
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HealthWise Chatbot</title>
+  <style>
+    :root{
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --primary: #2e8b57;
+      --accent: #0b5e7a;
+      --bubble-user: #e6f7ff;
+      --bubble-bot: #f1f5f9;
+      --shadow: 0 4px 16px rgba(0,0,0,.08);
+      --danger: #e11d48;
+    }
 
-					var userHtml = '<div class="d-flex justify-content-end mb-4"><div class="msg_cotainer_send">' + rawText + '<span class="msg_time_send">'+ str_time + '</span></div><div class="img_cont_msg"><img src="https://i.ibb.co/d5b84Xw/Untitled-design.png" class="rounded-circle user_img_msg"></div></div>';
-					
-					$("#text").val("");
-					$("#messageFormeight").append(userHtml);
+    * { box-sizing: border-box; }
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      background: radial-gradient(circle at 20% -10%, #e8f6f0 0%, transparent 40%),
+                  radial-gradient(circle at 100% 0%, #e8f0fb 0%, transparent 40%),
+                  var(--bg);
+      color: var(--text);
+    }
 
-					$.ajax({
-						data: {
-							msg: rawText,	
-						},
-						type: "POST",
-						url: "/get",
-					}).done(function(data) {
-						var botHtml = '<div class="d-flex justify-content-start mb-4"><div class="img_cont_msg"><img src="https://cdn-icons-png.flaticon.com/512/387/387569.png" class="rounded-circle user_img_msg"></div><div class="msg_cotainer">' + data + '<span class="msg_time">' + str_time + '</span></div></div>';
-						$("#messageFormeight").append($.parseHTML(botHtml));
-					});
-					event.preventDefault();
-				});
-			});
-		</script>
-        
-    </body>
+    .container { max-width: 720px; margin: 40px auto; padding: 0 16px; }
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      height: 74vh;
+      min-height: 420px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 18px; border-bottom: 1px solid #eef2f7;
+      background: linear-gradient(135deg, #ffffff 0%, #f9fbfd 100%);
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; }
+    .logo { width: 38px; height: 38px; border-radius: 9px;
+      background: linear-gradient(135deg, var(--primary), var(--accent)); display: inline-block;
+    }
+    .brand h1 { font-size: 16px; margin: 0; font-weight: 700; }
+    .brand p { margin: 0; font-size: 12px; color: var(--muted); }
+
+    .chat-area {
+      flex: 1; padding: 16px; overflow: auto; background: #f7fafe; scroll-behavior: smooth;
+    }
+    .message { display: inline-block; padding: 10px 14px; margin: 6px 0; border-radius: 20px;
+      max-width: 78%; line-height: 1.4; word-wrap: break-word;
+    }
+    .user { background: var(--bubble-user); align-self: flex-end;
+      border-top-right-radius: 4px; border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+    }
+    .bot { background: var(--bubble-bot); align-self: flex-start;
+      border-top-left-radius: 4px; border-bottom-left-radius: 20px;
+      border-bottom-right-radius: 20px;
+    }
+    .meta { font-size: 11px; color: var(--muted); margin-top: 2px; display: block; text-align: right; }
+
+    .input-area { padding: 12px; border-top: 1px solid #eef2f7; background: #fff; display: flex; gap: 8px; }
+    .input-area input {
+      flex: 1; padding: 12px 14px; border: 1px solid #d8dee9; border-radius: 8px;
+      font-size: 14px; outline: none;
+    }
+    .input-area input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(11,94,122,.15); }
+
+    .button { padding: 12px 16px; border: none; border-radius: 8px; background: var(--accent);
+      color: #fff; font-weight: 600; cursor: pointer;
+    }
+    .button.secondary {
+      background: #eef4f7; color: #1f2937; border: 1px solid #dbe6ee;
+    }
+
+    /* Scrollbar styling (optional) */
+    .chat-area::-webkit-scrollbar{ width: 10px; height: 10px; }
+    .chat-area::-webkit-scrollbar-thumb{ background: #cbd5e1; border-radius: 10px; }
+    .chat-area::-webkit-scrollbar-track{ background: transparent; }
+
+    @media (max-width: 720px) {
+      .container { margin: 12px auto; }
+      .card { height: 78vh; min-height: 520px; }
+      .message { max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card" aria-label="HealthWise chatbot">
+      <div class="header">
+        <div class="brand">
+          <span class="logo" aria-label="HealthWise logo"></span>
+          <div>
+            <h1>HealthWise Chatbot</h1>
+            <p>Basic Q&A assistant</p>
+          </div>
+        </div>
+        <div class="status" aria-live="polite" style="font-size:12px;color:#6b7280;">Online</div>
+      </div>
+
+      <div id="chat" class="chat-area" aria-label="chat messages">
+        <div class="message bot" role="article">
+          <div>Hi! I’m HealthWise. You can ask about common health topics like symptoms, vaccines, or wellness tips.</div>
+          <span class="meta">Bot</span>
+        </div>
+        <div class="message user" role="article" style="align-self:flex-end;">
+          <div>What can you help with?</div>
+          <span class="meta">You</span>
+        </div>
+        <!-- Additional messages will be appended here by JS -->
+      </div>
+
+      <form id="inputForm" class="input-area" autocomplete="off" aria-label="send message">
+        <input id="userInput" type="text" placeholder="Ask a health question, e.g., 'What are the symptoms of a cold?'" required />
+        <button class="button" type="submit">Send</button>
+        <button class="button secondary" type="button" id="clearBtn" title="Clear chat">Clear</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // Simple client-side UX; backend integration uses Flask endpoint /get (as per app.py)
+    const chat = document.getElementById('chat');
+    const form = document.getElementById('inputForm');
+    const userInput = document.getElementById('userInput');
+    const clearBtn = document.getElementById('clearBtn');
+
+    function addMessage(text, sender='bot') {
+      const msg = document.createElement('div');
+      msg.className = 'message ' + (sender === 'user' ? 'user' : 'bot');
+      msg.role = 'article';
+
+      const content = document.createElement('div');
+      content.textContent = text;
+      msg.appendChild(content);
+
+      const meta = document.createElement('span');
+      meta.className = 'meta';
+      meta.textContent = sender === 'user' ? 'You' : 'Bot';
+      msg.appendChild(meta);
+
+      chat.appendChild(msg);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function fetchBotReplyFromServer(input) {
+      // Send to your Flask backend at /get (POST) with form data "msg"
+      try {
+        const formData = new FormData();
+        formData.append('msg', input);
+
+        // If your Flask endpoint is configured to accept GET/POST, you can adapt:
+        // const url = '/get';
+        // For POST:
+        const response = await fetch('/get', {
+          method: 'POST',
+          body: formData,
+        });
+        if (response.ok) {
+          const text = await response.text();
+          return text;
+        } else {
+          return "I'm having trouble reaching the backend. Please try again later.";
+        }
+      } catch (e) {
+        return "Error contacting the backend. Please ensure the server is running.";
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const text = userInput.value.trim();
+      if (!text) return;
+      addMessage(text, 'user');
+      userInput.value = '';
+
+      // Show a quick "thinking" indicator by sending a bot message after a moment
+      const thinking = "Thinking...";
+      const thinkingMsg = document.createElement('div');
+      thinkingMsg.className = 'message bot';
+      thinkingMsg.role = 'article';
+      const content = document.createElement('div');
+      content.textContent = thinking;
+      thinkingMsg.appendChild(content);
+      const meta = document.createElement('span');
+      meta.className = 'meta';
+      meta.textContent = 'Bot';
+      thinkingMsg.appendChild(meta);
+      chat.appendChild(thinkingMsg);
+      chat.scrollTop = chat.scrollHeight;
+
+      // Fetch actual reply
+      const reply = await fetchBotReplyFromServer(text);
+      // replace thinking message with actual reply
+      thinkingMsg.querySelector('div').textContent = reply;
+      // Move to the end
+      chat.scrollTop = chat.scrollHeight;
+    });
+
+    clearBtn.addEventListener('click', () => {
+      while (chat.childNodes.length > 3) {
+        chat.removeChild(chat.lastChild);
+      }
+      addMessage("If you have a question, type it below.", 'bot');
+    });
+
+    window.addEventListener('load', () => {
+      userInput.focus();
+    });
+  </script>
+</body>
 </html>

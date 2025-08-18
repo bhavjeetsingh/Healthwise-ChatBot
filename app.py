@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 from src.helper import download_hugging_face_embeddings
+from langchain.memory import ConversationBufferMemory
 from langchain_pinecone import PineconeVectorStore
 from langchain_groq import ChatGroq
 from langchain.chains import create_retrieval_chain
@@ -8,6 +9,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 from src.prompt import *
 import os
+from langchain.chains import ConversationChain
+from langchain_groq import ChatGroq  # or Groq if you're using Mixtral
+
 
 
 app = Flask(__name__)
@@ -32,7 +36,6 @@ docsearch = PineconeVectorStore.from_existing_index(
 
 
 
-
 retriever = docsearch.as_retriever(search_type="similarity", search_kwargs={"k":3})
 
 chatModel = ChatGroq(model="llama3-8b-8192")
@@ -45,6 +48,8 @@ prompt = ChatPromptTemplate.from_messages(
 
 question_answer_chain = create_stuff_documents_chain(chatModel, prompt)
 rag_chain = create_retrieval_chain(retriever, question_answer_chain)
+
+memory = ConversationBufferMemory(return_messages=True, max_token_limit=1000)
 
 
 
@@ -62,8 +67,6 @@ def chat():
     response = rag_chain.invoke({"input": msg})
     print("Response : ", response["answer"])
     return str(response["answer"])
-
-
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port= 8080, debug= True)
